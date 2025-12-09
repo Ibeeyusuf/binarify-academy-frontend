@@ -1,0 +1,1 @@
+{"version":3,"file":"useApplicationModal.d.ts","sourceRoot":"","sources":["useApplicationModal.ts"],"names":[],"mappings":"AAQA,wBAAgB,mBAAmB;uBAQxB,oBAAoB,GAAG,mBAAmB,GAAG,IAAI,YAC9C,WAAW,GAAG,cAAc;;YAdhC,OAAO;mBACA,oBAAoB,GAAG,mBAAmB,GAAG,IAAI;qBAC/C,WAAW,GAAG,cAAc,GAAG,IAAI;EAkCrD"}
