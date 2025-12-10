@@ -533,17 +533,17 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-white" />
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <User className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">Personal Information</h3>
-        <p className="text-gray-600">Let's start with your basic details</p>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Personal Information</h3>
+        <p className="text-sm sm:text-base text-gray-600">Let's start with your basic details</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <Label htmlFor="firstName">First Name *</Label>
           <Input
@@ -578,14 +578,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <Label htmlFor="countryCode">Country Code *</Label>
           <Select value={formData.countryCode} onValueChange={(value) => handleInputChange("countryCode", value)}>
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select code" />
             </SelectTrigger>
-            <SelectContent position="popper" sideOffset={4} className="max-h-[300px]">
+            <SelectContent position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[200px] sm:max-h-[300px]">
               {countryCodes.map((code) => (
                 <SelectItem key={code.value} value={code.value}>
                   {code.flag} {code.label}
@@ -608,14 +608,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <Label htmlFor="country">Country *</Label>
           <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select your country" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
               {countries.map((country) => (
                 <SelectItem key={country.value} value={country.value}>
                   {country.label}
@@ -635,7 +635,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
             <SelectTrigger className="mt-1">
               <SelectValue placeholder={formData.country ? "Select state/region" : "Select country first"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
               {getStatesForCountry(formData.country).map((state) => (
                 <SelectItem key={state.value} value={state.value}>
                   {state.label}
@@ -649,7 +649,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </div>
       </div>
 
-      <div className="space-y-4 pt-4 border-t border-gray-200">
+      <div className="space-y-3 sm:space-y-4 pt-4 border-t border-gray-200">
         <div>
           <Label htmlFor="password" className="text-base font-medium">
             Create Login Password *
@@ -692,14 +692,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <BookOpen className="w-8 h-8 text-white" />
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">Program Selection</h3>
-        <p className="text-gray-600">Choose your track and program format</p>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Program Selection</h3>
+        <p className="text-sm sm:text-base text-gray-600">Choose your track and program format</p>
       </div>
 
       <div>
@@ -707,18 +707,18 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         <RadioGroup 
           value={formData.track} 
           onValueChange={(value) => handleInputChange("track", value)}
-          className="grid grid-cols-1 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
         >
           {tracks.map((track) => (
             <Label
               key={track.value}
               htmlFor={track.value}
-              className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 transition-colors"
+              className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-3 sm:p-4 cursor-pointer hover:border-blue-300 transition-colors"
             >
               <RadioGroupItem value={track.value} id={track.value} />
               <div className="flex items-center space-x-2">
                 {track.icon}
-                <span className="font-medium">{track.label}</span>
+                <span className="font-medium text-sm sm:text-base">{track.label}</span>
               </div>
             </Label>
           ))}
@@ -730,25 +730,25 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         <RadioGroup 
           value={formData.program} 
           onValueChange={(value) => handleInputChange("program", value)}
-          className="space-y-4"
+          className="space-y-3 sm:space-y-4"
         >
           {programs.map((program) => (
             <Label
               key={program.value}
               htmlFor={program.value}
-              className="flex items-start space-x-3 border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 transition-colors"
+              className="flex items-start space-x-3 border-2 border-gray-200 rounded-lg p-3 sm:p-4 cursor-pointer hover:border-blue-300 transition-colors"
             >
               <RadioGroupItem value={program.value} id={program.value} className="mt-1" />
               <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium">{program.label}</span>
-                  <Badge variant="outline" className="text-blue-600 border-blue-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-1 sm:gap-0">
+                  <span className="font-medium text-sm sm:text-base">{program.label}</span>
+                  <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs sm:text-sm">
                     {program.price}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{program.description}</p>
-                <div className="flex items-center text-sm text-blue-600">
-                  <Calendar className="w-4 h-4 mr-1" />
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">{program.description}</p>
+                <div className="flex items-center text-xs sm:text-sm text-blue-600">
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                   {program.duration}
                 </div>
               </div>
@@ -777,24 +777,24 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-white" />
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">Additional Information</h3>
-        <p className="text-gray-600">Just a few more details to complete your application</p>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Additional Information</h3>
+        <p className="text-sm sm:text-base text-gray-600">Just a few more details to complete your application</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <Label htmlFor="education">Highest Education Level</Label>
           <Select value={formData.education} onValueChange={(value) => handleInputChange("education", value)}>
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select education level" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
               <SelectItem value="high-school">High School</SelectItem>
               <SelectItem value="associate">Associate Degree</SelectItem>
               <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
@@ -811,7 +811,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select experience level" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
               <SelectItem value="entry">Entry Level (0-2 years)</SelectItem>
               <SelectItem value="mid">Mid Level (3-5 years)</SelectItem>
               <SelectItem value="senior">Senior Level (6+ years)</SelectItem>
@@ -827,7 +827,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select your current role or industry" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[200px] sm:max-h-[300px]">
             <SelectItem value="student">Student</SelectItem>
             <SelectItem value="recent-graduate">Recent Graduate</SelectItem>
             <SelectItem value="unemployed">Currently Unemployed</SelectItem>
@@ -854,14 +854,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <Label htmlFor="availableHours">Weekly Study Commitment</Label>
           <Select value={formData.availableHours} onValueChange={(value) => handleInputChange("availableHours", value)}>
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Hours per week" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
               <SelectItem value="5-10">5-10 hours per week</SelectItem>
               <SelectItem value="10-15">10-15 hours per week</SelectItem>
               <SelectItem value="15-20">15-20 hours per week</SelectItem>
@@ -878,7 +878,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="When would you like to start?" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
               <SelectItem value="immediately">Immediately</SelectItem>
               <SelectItem value="within-2-weeks">Within 2 weeks</SelectItem>
               <SelectItem value="within-month">Within a month</SelectItem>
@@ -895,7 +895,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select an option" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[200px] sm:max-h-[300px]">
             <SelectItem value="google">Google Search</SelectItem>
             <SelectItem value="facebook">Facebook</SelectItem>
             <SelectItem value="instagram">Instagram</SelectItem>
@@ -917,7 +917,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </Select>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <div className="flex items-start space-x-3">
           <Checkbox
             id="hasLaptop"
@@ -960,79 +960,81 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-white" />
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+          <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">Complete Your Enrollment</h3>
-        <p className="text-gray-600">Choose how you'd like to proceed with payment</p>
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Complete Your Enrollment</h3>
+        <p className="text-sm sm:text-base text-gray-600">Choose how you'd like to proceed with payment</p>
       </div>
 
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
         <div className="flex items-start space-x-3">
           <div className="bg-green-100 p-2 rounded-full">
-            <CheckCircle className="w-5 h-5 text-green-600" />
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
           </div>
           <div>
-            <h4 className="font-medium text-green-800">Application Submitted!</h4>
-            <p className="text-sm text-green-600 mt-1">
+            <h4 className="font-medium text-green-800 text-sm sm:text-base">Application Submitted!</h4>
+            <p className="text-xs sm:text-sm text-green-600 mt-1">
               Your application ID: <span className="font-mono font-bold">{submittedApplicationId?.substring(0, 8)}...</span>
             </p>
           </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-blue-800">Program Details</span>
-            <Badge variant="outline" className="text-blue-600 border-blue-200">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1 sm:gap-0">
+            <span className="font-medium text-blue-800 text-sm sm:text-base">Program Details</span>
+            <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs sm:text-sm">
               {formData.track.replace('-', ' ').toUpperCase()}
             </Badge>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
             <div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 {programs.find(p => p.value === formData.program)?.label}
               </p>
               <p className="text-xs text-gray-500">
                 {programs.find(p => p.value === formData.program)?.description}
               </p>
             </div>
-            <span className="text-lg font-bold text-blue-700">
+            <span className="text-base sm:text-lg font-bold text-blue-700">
               {programs.find(p => p.value === formData.program)?.price}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4">
           {paymentOptions.map((option) => (
             <button
               key={option.id}
               type="button"
               onClick={() => handlePaymentMethodSelect(option)}
               disabled={isProcessingPayment}
-              className={`flex items-start space-x-4 p-4 border-2 rounded-lg text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 border-2 rounded-lg text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
                 paymentMethod === option.id
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-blue-300'
               }`}
             >
-              <div className={`${option.color} p-3 rounded-full`}>
-                {option.icon}
+              <div className={`${option.color} p-2 sm:p-3 rounded-full`}>
+                <div className="w-5 h-5 sm:w-6 sm:h-6">
+                  {option.icon}
+                </div>
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-semibold text-gray-900">{option.title}</h4>
+                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{option.title}</h4>
                   {paymentMethod === option.id && (
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 text-white" />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">{option.description}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{option.description}</p>
                 {option.id === "later" && (
                   <p className="text-xs text-red-600 mt-1">
                     ⚠️ Limited spots available. Payment must be completed within 24 hours.
@@ -1044,19 +1046,19 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </div>
 
         {paymentMethod === "paystack" && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">Payment Information</h4>
-            <ul className="text-sm text-blue-600 space-y-1">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+            <h4 className="font-medium text-blue-800 text-sm sm:text-base mb-2">Payment Information</h4>
+            <ul className="text-xs sm:text-sm text-blue-600 space-y-1">
               <li className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Secure SSL encrypted payment
               </li>
               <li className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Multiple payment methods accepted
               </li>
               <li className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Instant enrollment upon successful payment
               </li>
             </ul>
@@ -1082,7 +1084,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
   const renderNavigationButtons = () => {
     if (applicationSuccess) {
       return (
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 sm:mt-8 pt-6 border-t border-gray-200">
           <Button
             type="button"
             variant="outline"
@@ -1090,13 +1092,13 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
               setApplicationSuccess(false);
               setStep(3);
             }}
-            className="px-6"
+            className="px-4 sm:px-6 w-full sm:w-auto"
             disabled={isProcessingPayment}
           >
             Back to Application
           </Button>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 w-full sm:w-auto">
             {paymentMethod && (
               <Button
                 type="button"
@@ -1105,7 +1107,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
                   if (option) handlePaymentMethodSelect(option);
                 }}
                 disabled={isProcessingPayment}
-                className="px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                className="px-6 sm:px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 w-full sm:w-auto"
               >
                 {isProcessingPayment ? (
                   <>
@@ -1129,14 +1131,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     }
     
     return (
-      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 sm:mt-8 pt-6 border-t border-gray-200">
         <div>
           {step > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={() => setStep(step - 1)}
-              className="px-6"
+              className="px-4 sm:px-6 w-full sm:w-auto"
               disabled={isSubmitting}
             >
               Previous
@@ -1144,15 +1146,15 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           )}
         </div>
         
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-500">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+          <span className="text-xs sm:text-sm text-gray-500">
             Step {step} of {applicationSuccess ? 4 : 3}
           </span>
           <Button
             type="submit"
             disabled={isSubmitting || (step === 3 && !formData.agreeToTerms)}
-            className={`px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed ${
-              step === 3 ? 'px-8' : ''
+            className={`px-4 sm:px-6 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed ${
+              step === 3 ? 'sm:px-8' : ''
             }`}
           >
             {isSubmitting ? (
@@ -1176,34 +1178,34 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto mx-4">
+      <DialogContent className="max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6 mx-0 sm:mx-4">
         <DialogHeader className="relative">
-          {/* <Button
+          <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="absolute -top-2 -right-2 h-8 w-8 p-0"
+            className="absolute -top-1 -right-1 h-8 w-8 p-0 sm:-top-2 sm:-right-2"
             disabled={isSubmitting || isProcessingPayment}
           >
             <X className="h-4 w-4" />
-          </Button> */}
+          </Button>
           
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
             {applicationSuccess ? "Complete Enrollment" : "Apply to Binarify Academy"}
           </DialogTitle>
           
-          <DialogDescription className="text-gray-600 text-center mt-2">
+          <DialogDescription className="text-gray-600 text-center mt-2 text-sm sm:text-base">
             {applicationSuccess 
               ? "Choose your payment method to secure your spot in the program"
               : "Join our skills-to-jobs program and transform your career in tech. Complete this application to get started."}
           </DialogDescription>
           
           {/* Progress Indicator */}
-          <div className="flex items-center justify-center space-x-2 mt-4">
+          <div className="flex items-center justify-center space-x-1 sm:space-x-2 mt-4">
             {[1, 2, 3, 4].map((stepNumber) => (
               <div key={stepNumber} className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
                     (applicationSuccess && stepNumber === 4) || (!applicationSuccess && stepNumber === step)
                       ? "bg-blue-600 text-white"
                       : stepNumber < step || (applicationSuccess && stepNumber < 4)
@@ -1212,14 +1214,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
                   } ${stepNumber === 4 && !applicationSuccess ? 'opacity-50' : ''}`}
                 >
                   {stepNumber < step || (applicationSuccess && stepNumber < 4) ? (
-                    <CheckCircle className="w-4 h-4" />
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                   ) : (
                     stepNumber
                   )}
                 </div>
                 {stepNumber < 4 && (
                   <div
-                    className={`w-12 h-1 mx-2 transition-colors ${
+                    className={`w-8 sm:w-12 h-1 mx-1 sm:mx-2 transition-colors ${
                       stepNumber < step || (applicationSuccess && stepNumber < 4)
                         ? "bg-green-500"
                         : "bg-gray-200"
