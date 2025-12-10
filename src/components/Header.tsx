@@ -305,7 +305,7 @@ export function Header({ onApplyClick }: HeaderProps) {
                     >
                       Apply for Professional Program
                     </Button>
-                    <Button 
+                    {/* <Button 
                       variant="outline"
                       className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
                       onClick={() => {
@@ -314,7 +314,7 @@ export function Header({ onApplyClick }: HeaderProps) {
                       }}
                     >
                       Apply for LaunchPad Program
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </motion.div>

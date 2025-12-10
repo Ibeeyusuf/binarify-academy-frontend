@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { baseURL } from '../constant';
 // Create axios instance - FIXED for Vite
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    baseURL: import.meta.env.VITE_API_URL || `${baseURL}/api`,
     headers: {
         'Content-Type': 'application/json',
     },

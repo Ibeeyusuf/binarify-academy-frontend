@@ -6,6 +6,7 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
 import { toast } from "sonner";
 import { LogIn, Lock, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { baseURL } from "../constant";
 
 
 export default function LoginPage() {
@@ -38,7 +39,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch(`${baseURL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +90,7 @@ export default function LoginPage() {
     };
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch(`${baseURL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +239,7 @@ export default function LoginPage() {
           </form>
 
           {/* Demo Login Section */}
-          <div className="mt-6">
+          {/* <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
@@ -268,7 +269,7 @@ export default function LoginPage() {
                 Admin Demo
               </Button>
             </div>
-          </div>
+          </div> */}
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-4 border-t border-gray-100 pt-6">

@@ -6,7 +6,7 @@ import { Label } from "./ui/label";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom"
-
+import {baseURL} from "../constant";
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,7 +32,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch(`${baseURL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
