@@ -1,1 +1,1 @@
-export const baseURL = 'https://binarify-academy-backend.onrender.com/';
+export const baseURL = 'https://binarify-academy-backend.onrender.com';
