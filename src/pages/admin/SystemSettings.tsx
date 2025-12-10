@@ -15,9 +15,9 @@ const SystemSettings: React.FC = () => {
   
   // General Settings
   const [generalSettings, setGeneralSettings] = useState({
-    siteName: 'LearnAfrica',
-    siteUrl: 'https://learnafrica.com',
-    supportEmail: 'support@learnafrica.com',
+    siteName: 'BinarifyAcademy',
+    siteUrl: 'https://BinarifyAcademy.com',
+    supportEmail: 'support@BinarifyAcademy.com',
     contactPhone: '+234 123 456 7890',
     maintenanceMode: false,
   });
@@ -26,10 +26,10 @@ const SystemSettings: React.FC = () => {
   const [emailSettings, setEmailSettings] = useState({
     smtpHost: 'smtp.gmail.com',
     smtpPort: '587',
-    smtpUser: 'noreply@learnafrica.com',
+    smtpUser: 'noreply@BinarifyAcademy.com',
     smtpPassword: '',
-    fromEmail: 'noreply@learnafrica.com',
-    fromName: 'LearnAfrica',
+    fromEmail: 'noreply@BinarifyAcademy.com',
+    fromName: 'BinarifyAcademy',
   });
 
   // Payment Settings

@@ -764,7 +764,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           value={formData.motivation}
           onChange={(e) => handleInputChange("motivation", e.target.value)}
           className="mt-1"
-          placeholder="Tell us about your motivation and career goals..."
+          placeholder="Should not be less than 50 characters"
           rows={4}
         />
       </div>

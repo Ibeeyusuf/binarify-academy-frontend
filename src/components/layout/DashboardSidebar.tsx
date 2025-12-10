@@ -32,7 +32,7 @@ const DashboardSidebar: React.FC = () => {
       <div className="p-6 border-b">
         <Link to="/" className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg"></div>
-          <span className="text-xl font-bold text-gray-900">LearnAfrica</span>
+          <span className="text-xl font-bold text-gray-900">BinarifyAcademy</span>
         </Link>
       </div>
 
