@@ -1,1 +1,1 @@
-export const baseURL = 'http://localhost:8000/api';
+export const baseURL = 'https://binarify-academy-backend.onrender.com';
