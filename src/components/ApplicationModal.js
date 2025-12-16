@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
-import { CheckCircle, Calendar, User, BookOpen, ArrowRight, Code, Database, Bug, Settings, Briefcase, CreditCard, Clock, LogIn } from "lucide-react";
+import { CheckCircle, Calendar, User, BookOpen, ArrowRight, Code, Database, Bug, Settings, Briefcase, CreditCard, Clock, LogIn, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { applicationService } from "../services/api";
 import paymentService from "../services/api/paymentService";
@@ -51,6 +51,10 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         agreeToTerms: false,
         wantsUpdates: true
     });
+    
+    // WhatsApp phone number for staff communication
+    const whatsappPhoneNumber = "2348108527214"; // Replace with actual staff WhatsApp number
+
     const tracks = [
         { value: "project-management", label: "Project Management", icon: _jsx(Briefcase, { className: "w-4 h-4" }) },
         { value: "frontend-development", label: "Frontend Development", icon: _jsx(Code, { className: "w-4 h-4" }) },
@@ -198,6 +202,15 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
             icon: _jsx(CreditCard, { className: "w-6 h-6" }),
             color: "bg-gradient-to-r from-green-500 to-emerald-600",
             action: "paystack"
+        },
+        {
+            id: "whatsapp-60",
+            title: "Pay 60% Now",
+            description: "Pay 60% to secure your spot. Chat with our staff on WhatsApp for payment arrangement.",
+            icon: _jsx(MessageCircle, { className: "w-6 h-6" }),
+            color: "bg-gradient-to-r from-green-500 to-green-600",
+            action: "whatsapp",
+            percentage: 60
         },
         {
             id: "login",
@@ -349,9 +362,13 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     };
     const handlePaymentMethodSelect = async (method) => {
         setPaymentMethod(method.id);
+        
         switch (method.action) {
             case "paystack":
                 await handlePaystackPayment();
+                break;
+            case "whatsapp":
+                handleWhatsAppRedirect(method.percentage);
                 break;
             case "login":
                 handleLoginRedirect();
@@ -361,6 +378,40 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
                 break;
         }
     };
+    
+    const handleWhatsAppRedirect = (percentage = 60) => {
+        const fullAmount = getProgramPrice(formData.program);
+        const partialAmount = fullAmount * (percentage / 100);
+        
+        const message = `Hello Binarify Academy Team!
+
+I've just submitted my application and I'm interested in the ${percentage}% payment option.
+
+Application Details:
+• Name: ${formData.firstName} ${formData.lastName}
+• Email: ${formData.email}
+• Phone: ${formData.countryCode} ${formData.phone}
+• Program: ${formData.program === 'launchpad' ? 'LaunchPad Track' : 'Professional Track'}
+• Track: ${formData.track.replace('-', ' ').toUpperCase()}
+• Application ID: ${submittedApplicationId}
+• Total Amount: ₦${fullAmount.toLocaleString()}
+• ${percentage}% Payment Amount: ₦${partialAmount.toLocaleString()}
+
+Please send me the payment link for the ${percentage}% payment.`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${whatsappPhoneNumber}?text=${encodedMessage}`;
+        
+        window.open(whatsappUrl, '_blank');
+        
+        toast.success(`Opening WhatsApp to arrange ${percentage}% payment...`);
+        
+        setTimeout(() => {
+            onClose();
+            resetForm();
+        }, 2000);
+    };
+
     const handlePaystackPayment = async () => {
         if (!submittedApplicationId) {
             toast.error("Application ID not found");
@@ -451,9 +502,221 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     const renderStep1 = () => (_jsxs(motion.div, { initial: { x: 300, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: -300, opacity: 0 }, transition: { duration: 0.3 }, className: "space-y-6", children: [_jsxs("div", { className: "text-center mb-6", children: [_jsx("div", { className: "w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4", children: _jsx(User, { className: "w-8 h-8 text-white" }) }), _jsx("h3", { className: "text-xl font-semibold text-gray-900", children: "Personal Information" }), _jsx("p", { className: "text-gray-600", children: "Let's start with your basic details" })] }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "firstName", children: "First Name *" }), _jsx(Input, { id: "firstName", value: formData.firstName, onChange: (e) => handleInputChange("firstName", e.target.value), className: "mt-1", placeholder: "Enter your first name" })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "lastName", children: "Last Name *" }), _jsx(Input, { id: "lastName", value: formData.lastName, onChange: (e) => handleInputChange("lastName", e.target.value), className: "mt-1", placeholder: "Enter your last name" })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "email", children: "Email Address *" }), _jsx(Input, { id: "email", type: "email", value: formData.email, onChange: (e) => handleInputChange("email", e.target.value), className: "mt-1", placeholder: "Enter your email address" })] }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "countryCode", children: "Country Code *" }), _jsxs(Select, { value: formData.countryCode, onValueChange: (value) => handleInputChange("countryCode", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Select code" }) }), _jsx(SelectContent, { position: "popper", sideOffset: 4, className: "max-h-[300px]", children: countryCodes.map((code) => (_jsxs(SelectItem, { value: code.value, children: [code.flag, " ", code.label] }, code.value))) })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "phone", children: "Phone Number *" }), _jsx(Input, { id: "phone", type: "tel", value: formData.phone, onChange: (e) => handleInputChange("phone", e.target.value), className: "mt-1", placeholder: "Enter your phone number" })] })] }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "country", children: "Country *" }), _jsxs(Select, { value: formData.country, onValueChange: (value) => handleInputChange("country", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Select your country" }) }), _jsx(SelectContent, { children: countries.map((country) => (_jsx(SelectItem, { value: country.value, children: country.label }, country.value))) })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "state", children: "State/Region *" }), _jsxs(Select, { value: formData.state, onValueChange: (value) => handleInputChange("state", value), disabled: !formData.country, children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: formData.country ? "Select state/region" : "Select country first" }) }), _jsxs(SelectContent, { children: [getStatesForCountry(formData.country).map((state) => (_jsx(SelectItem, { value: state.value, children: state.label }, state.value))), formData.country && getStatesForCountry(formData.country).length === 0 && (_jsx(SelectItem, { value: "not-specified", children: "Region not specified" }))] })] })] })] }), _jsxs("div", { className: "space-y-4 pt-4 border-t border-gray-200", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "password", className: "text-base font-medium", children: "Create Login Password *" }), _jsx(Input, { id: "password", type: "password", value: formData.password, onChange: (e) => handleInputChange("password", e.target.value), className: "mt-2", placeholder: "Enter your password", required: true }), _jsx("p", { className: "text-xs text-gray-500 mt-1", children: "Minimum 8 characters with letters and numbers" })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "confirmPassword", className: "text-base font-medium", children: "Confirm Password *" }), _jsx(Input, { id: "confirmPassword", type: "password", value: formData.confirmPassword, onChange: (e) => handleInputChange("confirmPassword", e.target.value), className: "mt-2", placeholder: "Re-enter your password", required: true })] })] })] }));
     const renderStep2 = () => (_jsxs(motion.div, { initial: { x: 300, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: -300, opacity: 0 }, transition: { duration: 0.3 }, className: "space-y-6", children: [_jsxs("div", { className: "text-center mb-6", children: [_jsx("div", { className: "w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4", children: _jsx(BookOpen, { className: "w-8 h-8 text-white" }) }), _jsx("h3", { className: "text-xl font-semibold text-gray-900", children: "Program Selection" }), _jsx("p", { className: "text-gray-600", children: "Choose your track and program format" })] }), _jsxs("div", { children: [_jsx(Label, { className: "text-base font-medium mb-3 block", children: "Select Your Track *" }), _jsx(RadioGroup, { value: formData.track, onValueChange: (value) => handleInputChange("track", value), className: "grid grid-cols-1 gap-4", children: tracks.map((track) => (_jsxs(Label, { htmlFor: track.value, className: "flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 transition-colors", children: [_jsx(RadioGroupItem, { value: track.value, id: track.value }), _jsxs("div", { className: "flex items-center space-x-2", children: [track.icon, _jsx("span", { className: "font-medium", children: track.label })] })] }, track.value))) })] }), _jsxs("div", { children: [_jsx(Label, { className: "text-base font-medium mb-3 block", children: "Select Your Program *" }), _jsx(RadioGroup, { value: formData.program, onValueChange: (value) => handleInputChange("program", value), className: "space-y-4", children: programs.map((program) => (_jsxs(Label, { htmlFor: program.value, className: "flex items-start space-x-3 border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 transition-colors", children: [_jsx(RadioGroupItem, { value: program.value, id: program.value, className: "mt-1" }), _jsxs("div", { className: "flex-1", children: [_jsxs("div", { className: "flex items-center justify-between mb-1", children: [_jsx("span", { className: "font-medium", children: program.label }), _jsx(Badge, { variant: "outline", className: "text-blue-600 border-blue-200", children: program.price })] }), _jsx("p", { className: "text-sm text-gray-600 mb-1", children: program.description }), _jsxs("div", { className: "flex items-center text-sm text-blue-600", children: [_jsx(Calendar, { className: "w-4 h-4 mr-1" }), program.duration] })] })] }, program.value))) })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "motivation", children: "Why do you want to join this program? *" }), _jsx(Textarea, { id: "motivation", value: formData.motivation, onChange: (e) => handleInputChange("motivation", e.target.value), className: "mt-1", placeholder: "Should not be less than 50 characters..", rows: 4 })] })] }));
     const renderStep3 = () => (_jsxs(motion.div, { initial: { x: 300, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: -300, opacity: 0 }, transition: { duration: 0.3 }, className: "space-y-6", children: [_jsxs("div", { className: "text-center mb-6", children: [_jsx("div", { className: "w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4", children: _jsx(CheckCircle, { className: "w-8 h-8 text-white" }) }), _jsx("h3", { className: "text-xl font-semibold text-gray-900", children: "Additional Information" }), _jsx("p", { className: "text-gray-600", children: "Just a few more details to complete your application" })] }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "education", children: "Highest Education Level" }), _jsxs(Select, { value: formData.education, onValueChange: (value) => handleInputChange("education", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Select education level" }) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "high-school", children: "High School" }), _jsx(SelectItem, { value: "associate", children: "Associate Degree" }), _jsx(SelectItem, { value: "bachelor", children: "Bachelor's Degree" }), _jsx(SelectItem, { value: "master", children: "Master's Degree" }), _jsx(SelectItem, { value: "phd", children: "PhD" }), _jsx(SelectItem, { value: "other", children: "Other" })] })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "experience", children: "Work Experience" }), _jsxs(Select, { value: formData.experience, onValueChange: (value) => handleInputChange("experience", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Select experience level" }) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "entry", children: "Entry Level (0-2 years)" }), _jsx(SelectItem, { value: "mid", children: "Mid Level (3-5 years)" }), _jsx(SelectItem, { value: "senior", children: "Senior Level (6+ years)" }), _jsx(SelectItem, { value: "career-change", children: "Career Change" })] })] })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "currentRole", children: "Current Role/Industry" }), _jsxs(Select, { value: formData.currentRole, onValueChange: (value) => handleInputChange("currentRole", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Select your current role or industry" }) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "student", children: "Student" }), _jsx(SelectItem, { value: "recent-graduate", children: "Recent Graduate" }), _jsx(SelectItem, { value: "unemployed", children: "Currently Unemployed" }), _jsx(SelectItem, { value: "entrepreneur", children: "Entrepreneur/Business Owner" }), _jsx(SelectItem, { value: "tech-developer", children: "Software Developer" }), _jsx(SelectItem, { value: "tech-other", children: "Other Tech Role" }), _jsx(SelectItem, { value: "finance", children: "Finance/Banking" }), _jsx(SelectItem, { value: "healthcare", children: "Healthcare" }), _jsx(SelectItem, { value: "education", children: "Education/Teaching" }), _jsx(SelectItem, { value: "marketing", children: "Marketing/Advertising" }), _jsx(SelectItem, { value: "sales", children: "Sales" }), _jsx(SelectItem, { value: "operations", children: "Operations/Admin" }), _jsx(SelectItem, { value: "hr", children: "Human Resources" }), _jsx(SelectItem, { value: "retail", children: "Retail/Customer Service" }), _jsx(SelectItem, { value: "consulting", children: "Consulting" }), _jsx(SelectItem, { value: "government", children: "Government/Public Service" }), _jsx(SelectItem, { value: "ngo", children: "NGO/Non-Profit" }), _jsx(SelectItem, { value: "media", children: "Media/Communications" }), _jsx(SelectItem, { value: "manufacturing", children: "Manufacturing" }), _jsx(SelectItem, { value: "oil-gas", children: "Oil & Gas" }), _jsx(SelectItem, { value: "agriculture", children: "Agriculture" }), _jsx(SelectItem, { value: "other", children: "Other Industry" })] })] })] }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "availableHours", children: "Weekly Study Commitment" }), _jsxs(Select, { value: formData.availableHours, onValueChange: (value) => handleInputChange("availableHours", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Hours per week" }) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "5-10", children: "5-10 hours per week" }), _jsx(SelectItem, { value: "10-15", children: "10-15 hours per week" }), _jsx(SelectItem, { value: "15-20", children: "15-20 hours per week" }), _jsx(SelectItem, { value: "20-25", children: "20-25 hours per week" }), _jsx(SelectItem, { value: "25+", children: "25+ hours per week" }), _jsx(SelectItem, { value: "flexible", children: "Flexible schedule" })] })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "preferredStartDate", children: "Preferred Start Date" }), _jsxs(Select, { value: formData.preferredStartDate, onValueChange: (value) => handleInputChange("preferredStartDate", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "When would you like to start?" }) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "immediately", children: "Immediately" }), _jsx(SelectItem, { value: "within-2-weeks", children: "Within 2 weeks" }), _jsx(SelectItem, { value: "within-month", children: "Within a month" }), _jsx(SelectItem, { value: "next-cohort", children: "Next available cohort" }), _jsx(SelectItem, { value: "flexible", children: "Flexible timing" })] })] })] })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "referralSource", children: "How did you hear about us?" }), _jsxs(Select, { value: formData.referralSource, onValueChange: (value) => handleInputChange("referralSource", value), children: [_jsx(SelectTrigger, { className: "mt-1", children: _jsx(SelectValue, { placeholder: "Select an option" }) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "google", children: "Google Search" }), _jsx(SelectItem, { value: "facebook", children: "Facebook" }), _jsx(SelectItem, { value: "instagram", children: "Instagram" }), _jsx(SelectItem, { value: "twitter", children: "Twitter/X" }), _jsx(SelectItem, { value: "linkedin", children: "LinkedIn" }), _jsx(SelectItem, { value: "youtube", children: "YouTube" }), _jsx(SelectItem, { value: "whatsapp", children: "WhatsApp" }), _jsx(SelectItem, { value: "friend", children: "Friend/Family" }), _jsx(SelectItem, { value: "colleague", children: "Work Colleague" }), _jsx(SelectItem, { value: "tech-community", children: "Tech Community/Forum" }), _jsx(SelectItem, { value: "university", children: "University/School" }), _jsx(SelectItem, { value: "job-board", children: "Job Board" }), _jsx(SelectItem, { value: "podcast", children: "Podcast" }), _jsx(SelectItem, { value: "blog", children: "Blog/Article" }), _jsx(SelectItem, { value: "event", children: "Tech Event/Meetup" }), _jsx(SelectItem, { value: "advertisement", children: "Online Advertisement" }), _jsx(SelectItem, { value: "other", children: "Other" })] })] })] }), _jsxs("div", { className: "space-y-4", children: [_jsxs("div", { className: "flex items-start space-x-3", children: [_jsx(Checkbox, { id: "hasLaptop", checked: formData.hasLaptop, onCheckedChange: (checked) => handleInputChange("hasLaptop", checked) }), _jsx(Label, { htmlFor: "hasLaptop", className: "text-sm leading-5", children: "I have access to a laptop/computer for the program" })] }), _jsxs("div", { className: "flex items-start space-x-3", children: [_jsx(Checkbox, { id: "wantsUpdates", checked: formData.wantsUpdates, onCheckedChange: (checked) => handleInputChange("wantsUpdates", checked) }), _jsx(Label, { htmlFor: "wantsUpdates", className: "text-sm leading-5", children: "I'd like to receive updates about new programs and career opportunities" })] }), _jsxs("div", { className: "flex items-start space-x-3", children: [_jsx(Checkbox, { id: "agreeToTerms", checked: formData.agreeToTerms, onCheckedChange: (checked) => handleInputChange("agreeToTerms", checked) }), _jsxs(Label, { htmlFor: "agreeToTerms", className: "text-sm leading-5", children: ["I agree to the ", _jsx("a", { href: "#", className: "text-blue-600 hover:underline", children: "Terms & Conditions" }), " and ", _jsx("a", { href: "#", className: "text-blue-600 hover:underline", children: "Privacy Policy" }), " *"] })] })] })] }));
-    const renderStep4 = () => (_jsxs(motion.div, { initial: { x: 300, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: -300, opacity: 0 }, transition: { duration: 0.3 }, className: "space-y-6", children: [_jsxs("div", { className: "text-center mb-6", children: [_jsx("div", { className: "w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4", children: _jsx(CheckCircle, { className: "w-8 h-8 text-white" }) }), _jsx("h3", { className: "text-xl font-semibold text-gray-900", children: "Complete Your Enrollment" }), _jsx("p", { className: "text-gray-600", children: "Choose how you'd like to proceed with payment" })] }), _jsx("div", { className: "bg-green-50 border border-green-200 rounded-lg p-4 mb-6", children: _jsxs("div", { className: "flex items-start space-x-3", children: [_jsx("div", { className: "bg-green-100 p-2 rounded-full", children: _jsx(CheckCircle, { className: "w-5 h-5 text-green-600" }) }), _jsxs("div", { children: [_jsx("h4", { className: "font-medium text-green-800", children: "Application Submitted!" }), _jsxs("p", { className: "text-sm text-green-600 mt-1", children: ["Your application ID: ", _jsxs("span", { className: "font-mono font-bold", children: [submittedApplicationId?.substring(0, 8), "..."] })] })] })] }) }), _jsxs("div", { className: "space-y-4", children: [_jsxs("div", { className: "bg-blue-50 border border-blue-200 rounded-lg p-4", children: [_jsxs("div", { className: "flex items-center justify-between mb-2", children: [_jsx("span", { className: "font-medium text-blue-800", children: "Program Details" }), _jsx(Badge, { variant: "outline", className: "text-blue-600 border-blue-200", children: formData.track.replace('-', ' ').toUpperCase() })] }), _jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { children: [_jsx("p", { className: "text-sm text-gray-600", children: programs.find(p => p.value === formData.program)?.label }), _jsx("p", { className: "text-xs text-gray-500", children: programs.find(p => p.value === formData.program)?.description })] }), _jsx("span", { className: "text-lg font-bold text-blue-700", children: programs.find(p => p.value === formData.program)?.price })] })] }), _jsx("div", { className: "grid grid-cols-1 gap-4", children: paymentOptions.map((option) => (_jsxs("button", { type: "button", onClick: () => handlePaymentMethodSelect(option), disabled: isProcessingPayment, className: `flex items-start space-x-4 p-4 border-2 rounded-lg text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === option.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-blue-300'}`, children: [_jsx("div", { className: `${option.color} p-3 rounded-full`, children: option.icon }), _jsxs("div", { className: "flex-1", children: [_jsxs("div", { className: "flex items-center justify-between mb-1", children: [_jsx("h4", { className: "font-semibold text-gray-900", children: option.title }), paymentMethod === option.id && (_jsx("div", { className: "w-6 h-6 bg-green-500 rounded-full flex items-center justify-center", children: _jsx(CheckCircle, { className: "w-4 h-4 text-white" }) }))] }), _jsx("p", { className: "text-sm text-gray-600", children: option.description }), option.id === "later" && (_jsx("p", { className: "text-xs text-red-600 mt-1", children: "\u26A0\uFE0F Limited spots available. Payment must be completed within 24 hours." }))] })] }, option.id))) }), paymentMethod === "paystack" && (_jsxs("div", { className: "bg-blue-50 border border-blue-200 rounded-lg p-4", children: [_jsx("h4", { className: "font-medium text-blue-800 mb-2", children: "Payment Information" }), _jsxs("ul", { className: "text-sm text-blue-600 space-y-1", children: [_jsxs("li", { className: "flex items-center", children: [_jsx(CheckCircle, { className: "w-4 h-4 mr-2" }), "Secure SSL encrypted payment"] }), _jsxs("li", { className: "flex items-center", children: [_jsx(CheckCircle, { className: "w-4 h-4 mr-2" }), "Multiple payment methods accepted"] }), _jsxs("li", { className: "flex items-center", children: [_jsx(CheckCircle, { className: "w-4 h-4 mr-2" }), "Instant enrollment upon successful payment"] })] })] }))] })] }));
+    
+    const renderStep4 = () => {
+        const fullAmount = getProgramPrice(formData.program);
+        const selectedPayment = paymentOptions.find(opt => opt.id === paymentMethod);
+        const isWhatsApp = selectedPayment?.action === 'whatsapp';
+        const partialAmount = fullAmount * (selectedPayment?.percentage || 60) / 100;
+        const remainingAmount = fullAmount - partialAmount;
+        
+        return (
+            _jsxs(motion.div, { 
+                initial: { x: 300, opacity: 0 }, 
+                animate: { x: 0, opacity: 1 }, 
+                exit: { x: -300, opacity: 0 }, 
+                transition: { duration: 0.3 }, 
+                className: "space-y-6", 
+                children: [
+                    _jsxs("div", { 
+                        className: "text-center mb-6", 
+                        children: [
+                            _jsx("div", { 
+                                className: "w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4", 
+                                children: _jsx(CheckCircle, { className: "w-8 h-8 text-white" }) 
+                            }), 
+                            _jsx("h3", { className: "text-xl font-semibold text-gray-900", children: "Complete Your Enrollment" }), 
+                            _jsx("p", { className: "text-gray-600", children: "Choose how you'd like to proceed with payment" })
+                        ] 
+                    }),
+                    
+                    _jsx("div", { 
+                        className: "bg-green-50 border border-green-200 rounded-lg p-4 mb-6", 
+                        children: _jsxs("div", { 
+                            className: "flex items-start space-x-3", 
+                            children: [
+                                _jsx("div", { 
+                                    className: "bg-green-100 p-2 rounded-full", 
+                                    children: _jsx(CheckCircle, { className: "w-5 h-5 text-green-600" }) 
+                                }), 
+                                _jsxs("div", { 
+                                    children: [
+                                        _jsx("h4", { className: "font-medium text-green-800", children: "Application Submitted!" }), 
+                                        _jsxs("p", { 
+                                            className: "text-sm text-green-600 mt-1", 
+                                            children: [
+                                                "Your application ID: ", 
+                                                _jsxs("span", { 
+                                                    className: "font-mono font-bold", 
+                                                    children: [submittedApplicationId?.substring(0, 8), "..."]
+                                                })
+                                            ]
+                                        })
+                                    ]
+                                })
+                            ]
+                        }) 
+                    }),
+                    
+                    _jsxs("div", { 
+                        className: "space-y-4", 
+                        children: [
+                            _jsxs("div", { 
+                                className: "bg-blue-50 border border-blue-200 rounded-lg p-4", 
+                                children: [
+                                    _jsxs("div", { 
+                                        className: "flex items-center justify-between mb-2", 
+                                        children: [
+                                            _jsx("span", { className: "font-medium text-blue-800", children: "Program Details" }), 
+                                            _jsx(Badge, { variant: "outline", className: "text-blue-600 border-blue-200", children: formData.track.replace('-', ' ').toUpperCase() })
+                                        ]
+                                    }), 
+                                    _jsxs("div", { 
+                                        className: "flex items-center justify-between", 
+                                        children: [
+                                            _jsxs("div", { 
+                                                children: [
+                                                    _jsx("p", { className: "text-sm text-gray-600", children: programs.find(p => p.value === formData.program)?.label }), 
+                                                    _jsx("p", { className: "text-xs text-gray-500", children: programs.find(p => p.value === formData.program)?.description })
+                                                ]
+                                            }), 
+                                            _jsx("span", { className: "text-lg font-bold text-blue-700", children: programs.find(p => p.value === formData.program)?.price })
+                                        ]
+                                    }),
+                                    
+                                    isWhatsApp && _jsxs("div", { 
+                                        className: "mt-3 pt-3 border-t border-blue-100 space-y-2", 
+                                        children: [
+                                            _jsxs("div", { 
+                                                className: "flex justify-between items-center", 
+                                                children: [
+                                                    _jsx("span", { className: "text-sm text-gray-600", children: `Initial Payment (${selectedPayment?.percentage || 60}%):` }), 
+                                                    _jsx("span", { className: "font-semibold text-green-600", children: `₦${partialAmount.toLocaleString()}` })
+                                                ]
+                                            }), 
+                                            _jsxs("div", { 
+                                                className: "flex justify-between items-center", 
+                                                children: [
+                                                    _jsx("span", { className: "text-sm text-gray-600", children: `Remaining Balance (${100 - (selectedPayment?.percentage || 60)}%):` }), 
+                                                    _jsx("span", { className: "font-semibold text-orange-600", children: `₦${remainingAmount.toLocaleString()}` })
+                                                ]
+                                            })
+                                        ]
+                                    })
+                                ]
+                            }),
+                            
+                            _jsx("div", { 
+                                className: "grid grid-cols-1 gap-4", 
+                                children: paymentOptions.map((option) => (
+                                    _jsxs("button", { 
+                                        type: "button", 
+                                        onClick: () => handlePaymentMethodSelect(option), 
+                                        disabled: isProcessingPayment, 
+                                        className: `flex items-start space-x-4 p-4 border-2 rounded-lg text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === option.id
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-200 hover:border-blue-300'}`, 
+                                        children: [
+                                            _jsx("div", { className: `${option.color} p-3 rounded-full`, children: option.icon }), 
+                                            _jsxs("div", { 
+                                                className: "flex-1", 
+                                                children: [
+                                                    _jsxs("div", { 
+                                                        className: "flex items-center justify-between mb-1", 
+                                                        children: [
+                                                            _jsx("h4", { className: "font-semibold text-gray-900", children: option.title }), 
+                                                            paymentMethod === option.id && (
+                                                                _jsx("div", { 
+                                                                    className: "w-6 h-6 bg-green-500 rounded-full flex items-center justify-center", 
+                                                                    children: _jsx(CheckCircle, { className: "w-4 h-4 text-white" })
+                                                                })
+                                                            )
+                                                        ]
+                                                    }), 
+                                                    _jsx("p", { className: "text-sm text-gray-600", children: option.description }),
+                                                    option.id === "whatsapp-60" && (
+                                                        _jsx("div", { 
+                                                            className: "mt-2 flex items-center text-xs text-green-600", 
+                                                            children: [
+                                                                _jsx(MessageCircle, { className: "w-3 h-3 mr-1" }), 
+                                                                _jsx("span", { children: "Chat with our team to arrange payment" })
+                                                            ]
+                                                        })
+                                                    ),
+                                                    option.id === "later" && (
+                                                        _jsx("p", { className: "text-xs text-red-600 mt-1", children: "⚠️ Limited spots available. Payment must be completed within 24 hours." })
+                                                    )
+                                                ]
+                                            })
+                                        ]
+                                    }, option.id)
+                                ))
+                            }),
+                            
+                            paymentMethod && _jsxs("div", { 
+                                className: "bg-blue-50 border border-blue-200 rounded-lg p-4", 
+                                children: [
+                                    _jsx("h4", { 
+                                        className: "font-medium text-blue-800 mb-2", 
+                                        children: paymentMethod === 'whatsapp-60' ? 'WhatsApp Payment Process' : 'Payment Information'
+                                    }), 
+                                    _jsxs("ul", { 
+                                        className: "text-sm text-blue-600 space-y-1", 
+                                        children: paymentMethod === 'whatsapp-60' ? [
+                                            _jsxs("li", { 
+                                                className: "flex items-start", 
+                                                children: [
+                                                    _jsx(MessageCircle, { className: "w-4 h-4 mr-2 text-green-600 mt-0.5" }), 
+                                                    "You'll be redirected to WhatsApp to chat with our admissions team"
+                                                ]
+                                            }), 
+                                            _jsxs("li", { 
+                                                className: "flex items-start", 
+                                                children: [
+                                                    _jsx(MessageCircle, { className: "w-4 h-4 mr-2 text-blue-600 mt-0.5" }), 
+                                                    "Discuss payment options and get personalized assistance"
+                                                ]
+                                            }), 
+                                            _jsxs("li", { 
+                                                className: "flex items-start", 
+                                                children: [
+                                                    _jsx(CreditCard, { className: "w-4 h-4 mr-2 text-purple-600 mt-0.5" }), 
+                                                    "Receive secure payment link directly from our staff"
+                                                ]
+                                            })
+                                        ] : [
+                                            _jsxs("li", { 
+                                                className: "flex items-center", 
+                                                children: [
+                                                    _jsx(CheckCircle, { className: "w-4 h-4 mr-2" }), 
+                                                    "Secure SSL encrypted payment"
+                                                ]
+                                            }), 
+                                            _jsxs("li", { 
+                                                className: "flex items-center", 
+                                                children: [
+                                                    _jsx(CheckCircle, { className: "w-4 h-4 mr-2" }), 
+                                                    "Multiple payment methods accepted"
+                                                ]
+                                            }), 
+                                            _jsxs("li", { 
+                                                className: "flex items-center", 
+                                                children: [
+                                                    _jsx(CheckCircle, { className: "w-4 h-4 mr-2" }), 
+                                                    "Instant enrollment upon successful payment"
+                                                ]
+                                            })
+                                        ]
+                                    })
+                                ]
+                            })
+                        ]
+                    })
+                ]
+            })
+        );
+    };
+    
     const renderCurrentStep = () => {
         if (applicationSuccess) {
             return renderStep4();
@@ -478,7 +741,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         }
         return (_jsxs("div", { className: "flex justify-between items-center mt-8 pt-6 border-t border-gray-200", children: [_jsx("div", { children: step > 1 && (_jsx(Button, { type: "button", variant: "outline", onClick: () => setStep(step - 1), className: "px-6", disabled: isSubmitting, children: "Previous" })) }), _jsxs("div", { className: "flex items-center space-x-4", children: [_jsxs("span", { className: "text-sm text-gray-500", children: ["Step ", step, " of ", applicationSuccess ? 4 : 3] }), _jsx(Button, { type: "submit", disabled: isSubmitting || (step === 3 && !formData.agreeToTerms), className: `px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed ${step === 3 ? 'px-8' : ''}`, children: isSubmitting ? ("Submitting...") : step === 3 ? (_jsxs(_Fragment, { children: ["Submit Application", _jsx(CheckCircle, { className: "w-4 h-4 ml-2" })] })) : (_jsxs(_Fragment, { children: ["Continue", _jsx(ArrowRight, { className: "w-4 h-4 ml-2" })] })) })] })] }));
     };
-    return (_jsx(Dialog, { open: isOpen, onOpenChange: onClose, children: _jsxs(DialogContent, { className: "max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto mx-4", children: [_jsxs(DialogHeader, { className: "relative", children: [_jsx(DialogTitle, { className: "text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent", children: applicationSuccess ? "Complete Enrollment" : "Apply to Binarify Academy" }), _jsx(DialogDescription, { className: "text-gray-600 text-center mt-2", children: applicationSuccess
+    return (_jsx(Dialog, { open: isOpen, onOpenChange: onClose, children: _jsxs(DialogContent, { className: "fixed left-1/2 top-1/2 w-full max-w-2xl max-h-[90vh] -translate-x-1/2 -translate-y-1/2 p-4 sm:p-6 overflow-y-auto sm:rounded-lg border-0 sm:border", children: [_jsxs(DialogHeader, { className: "relative", children: [_jsx(DialogTitle, { className: "text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent", children: applicationSuccess ? "Complete Enrollment" : "Apply to Binarify Academy" }), _jsx(DialogDescription, { className: "text-gray-600 text-center mt-2", children: applicationSuccess
                                 ? "Choose your payment method to secure your spot in the program"
                                 : "Join our skills-to-jobs program and transform your career in tech. Complete this application to get started." }), _jsx("div", { className: "flex items-center justify-center space-x-2 mt-4", children: [1, 2, 3, 4].map((stepNumber) => (_jsxs("div", { className: "flex items-center", children: [_jsx("div", { className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${(applicationSuccess && stepNumber === 4) || (!applicationSuccess && stepNumber === step)
                                             ? "bg-blue-600 text-white"

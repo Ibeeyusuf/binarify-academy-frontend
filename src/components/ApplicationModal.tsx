@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
-import { X, CheckCircle, Calendar, User, Mail, Phone, BookOpen, Target, ArrowRight, Code, Database, Bug, Settings, Briefcase, CreditCard, Clock, LogIn } from "lucide-react";
+import { X, CheckCircle, Calendar, User, Mail, Phone, BookOpen, Target, ArrowRight, Code, Database, Bug, Settings, Briefcase, CreditCard, Clock, LogIn, Percent, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { applicationService, SubmitApplicationRequest } from "../services/api";
 import paymentService from "../services/api/paymentService";
@@ -60,7 +60,8 @@ interface PaymentOption {
   description: string;
   icon: React.ReactNode;
   color: string;
-  action: "paystack" | "login" | "later";
+  action: "paystack" | "login" | "later" | "whatsapp";
+  percentage?: number;
 }
 
 export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgram }: ApplicationModalProps) {
@@ -104,6 +105,9 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     agreeToTerms: false,
     wantsUpdates: true
   });
+
+  // WhatsApp phone number for staff communication
+  const whatsappPhoneNumber = "2348123456789";
 
   const tracks = [
     { value: "project-management", label: "Project Management", icon: <Briefcase className="w-4 h-4" /> },
@@ -251,7 +255,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
 
   const paymentOptions: PaymentOption[] = [
     {
-      id: "paystack",
+      id: "paystack-full",
       title: "Pay Now",
       description: "Secure payment via Paystack. Complete your enrollment instantly.",
       icon: <CreditCard className="w-6 h-6" />,
@@ -259,11 +263,20 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       action: "paystack"
     },
     {
+      id: "whatsapp-partial",
+      title: "Pay 60% Now",
+      description: "Pay 60% to secure your spot. Chat with our staff on WhatsApp for payment arrangement.",
+      icon: <MessageCircle className="w-6 h-6" />,
+      color: "bg-gradient-to-r from-green-500 to-green-600",
+      action: "whatsapp",
+      percentage: 60
+    },
+    {
       id: "login",
       title: "Login & Pay Later",
-      description: "Already have an account? Login to access your dashboard and make payment.",
+      description: "Already have an account? Login to access your dashboard.",
       icon: <LogIn className="w-6 h-6" />,
-      color: "bg-gradient-to-r from-blue-500 to-blue-600",
+      color: "bg-gradient-to-r from-purple-500 to-purple-600",
       action: "login"
     },
     {
@@ -271,7 +284,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       title: "Pay Later",
       description: "Submit application now, pay within 24 hours to secure your spot.",
       icon: <Clock className="w-6 h-6" />,
-      color: "bg-gradient-to-r from-purple-500 to-purple-600",
+      color: "bg-gradient-to-r from-orange-500 to-orange-600",
       action: "later"
     }
   ];
@@ -378,10 +391,8 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         const response = await applicationService.submitApplication(submissionData);
   
         if (response.success) {
-          // Store application ID for payment
           setSubmittedApplicationId(response.data.applicationId || response.data.id);
           setApplicationSuccess(true);
-          
           toast.success("Application submitted successfully!");
         } else {
           if (response.errors && response.errors.length > 0) {
@@ -414,7 +425,6 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     const programInfo = programs.find(p => p.value === program);
     if (!programInfo) return 0;
     
-    // Extract number from price string like "₦105,000"
     const priceString = programInfo.price.replace(/[^0-9]/g, '');
     return parseInt(priceString) || 0;
   };
@@ -425,6 +435,9 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     switch (method.action) {
       case "paystack":
         await handlePaystackPayment();
+        break;
+      case "whatsapp":
+        handleWhatsAppRedirect();
         break;
       case "login":
         handleLoginRedirect();
@@ -444,7 +457,6 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     setIsProcessingPayment(true);
     
     try {
-      // Initialize payment with backend
       const paymentResponse = await paymentService.initializePayment({
         applicationId: submittedApplicationId,
         program: formData.program,
@@ -461,7 +473,6 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       });
       
       if (paymentResponse.success && paymentResponse.data.authorization_url) {
-        // Redirect to Paystack checkout
         window.location.href = paymentResponse.data.authorization_url;
       } else {
         toast.error(paymentResponse.message || "Payment initialization failed");
@@ -472,6 +483,38 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     } finally {
       setIsProcessingPayment(false);
     }
+  };
+
+  const handleWhatsAppRedirect = () => {
+    const fullAmount = getProgramPrice(formData.program);
+    const partialAmount = fullAmount * 0.6;
+    
+    const message = `Hello Binarify Academy Team!
+
+I've just submitted my application and I'm interested in the 60% payment option.
+
+Application Details:
+• Name: ${formData.firstName} ${formData.lastName}
+• Email: ${formData.email}
+• Phone: ${formData.countryCode} ${formData.phone}
+• Program: ${formData.program === 'launchpad' ? 'LaunchPad Track' : 'Professional Track'}
+• Track: ${formData.track.replace('-', ' ').toUpperCase()}
+• Application ID: ${submittedApplicationId}
+• Total Amount: ₦${fullAmount.toLocaleString()}
+• 60% Payment Amount: ₦${partialAmount.toLocaleString()}
+
+Please send me the payment link for the 60% payment.`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${whatsappPhoneNumber}?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+    toast.success("Opening WhatsApp to connect with our team...");
+    
+    setTimeout(() => {
+      onClose();
+      resetForm();
+    }, 2000);
   };
 
   const handleLoginRedirect = () => {
@@ -489,7 +532,6 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
 
   const handlePayLater = () => {
     toast.success("Application submitted! You have 24 hours to complete payment.");
-    
     setTimeout(() => {
       onClose();
       resetForm();
@@ -543,51 +585,51 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         <p className="text-sm sm:text-base text-gray-600">Let's start with your basic details</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div>
-          <Label htmlFor="firstName">First Name *</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName" className="text-sm font-medium">First Name *</Label>
           <Input
             id="firstName"
             value={formData.firstName}
             onChange={(e) => handleInputChange("firstName", e.target.value)}
-            className="mt-1"
             placeholder="Enter your first name"
+            className="h-11 text-base"
           />
         </div>
-        <div>
-          <Label htmlFor="lastName">Last Name *</Label>
+        <div className="space-y-2">
+          <Label htmlFor="lastName" className="text-sm font-medium">Last Name *</Label>
           <Input
             id="lastName"
             value={formData.lastName}
             onChange={(e) => handleInputChange("lastName", e.target.value)}
-            className="mt-1"
             placeholder="Enter your last name"
+            className="h-11 text-base"
           />
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="email">Email Address *</Label>
+      <div className="space-y-2">
+        <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
         <Input
           id="email"
           type="email"
           value={formData.email}
           onChange={(e) => handleInputChange("email", e.target.value)}
-          className="mt-1"
           placeholder="Enter your email address"
+          className="h-11 text-base"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div>
-          <Label htmlFor="countryCode">Country Code *</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="countryCode" className="text-sm font-medium">Country Code *</Label>
           <Select value={formData.countryCode} onValueChange={(value) => handleInputChange("countryCode", value)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder="Select code" />
             </SelectTrigger>
-            <SelectContent position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[200px] sm:max-h-[300px]">
+            <SelectContent className="max-h-60">
               {countryCodes.map((code) => (
-                <SelectItem key={code.value} value={code.value}>
+                <SelectItem key={code.value} value={code.value} className="text-base">
                   {code.flag} {code.label}
                 </SelectItem>
               ))}
@@ -595,29 +637,29 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="phone">Phone Number *</Label>
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
           <Input
             id="phone"
             type="tel"
             value={formData.phone}
             onChange={(e) => handleInputChange("phone", e.target.value)}
-            className="mt-1"
             placeholder="Enter your phone number"
+            className="h-11 text-base"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div>
-          <Label htmlFor="country">Country *</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="country" className="text-sm font-medium">Country *</Label>
           <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder="Select your country" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
+            <SelectContent className="max-h-60">
               {countries.map((country) => (
-                <SelectItem key={country.value} value={country.value}>
+                <SelectItem key={country.value} value={country.value} className="text-base">
                   {country.label}
                 </SelectItem>
               ))}
@@ -625,42 +667,40 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="state">State/Region *</Label>
+        <div className="space-y-2">
+          <Label htmlFor="state" className="text-sm font-medium">State/Region *</Label>
           <Select 
             value={formData.state} 
             onValueChange={(value) => handleInputChange("state", value)}
             disabled={!formData.country}
           >
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder={formData.country ? "Select state/region" : "Select country first"} />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
+            <SelectContent className="max-h-60">
               {getStatesForCountry(formData.country).map((state) => (
-                <SelectItem key={state.value} value={state.value}>
+                <SelectItem key={state.value} value={state.value} className="text-base">
                   {state.label}
                 </SelectItem>
               ))}
               {formData.country && getStatesForCountry(formData.country).length === 0 && (
-                <SelectItem value="not-specified">Region not specified</SelectItem>
+                <SelectItem value="not-specified" className="text-base">Region not specified</SelectItem>
               )}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="space-y-3 sm:space-y-4 pt-4 border-t border-gray-200">
-        <div>
-          <Label htmlFor="password" className="text-base font-medium">
-            Create Login Password *
-          </Label>
+      <div className="space-y-4 pt-4 border-t border-gray-200">
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-sm font-medium">Create Login Password *</Label>
           <Input
             id="password"
             type="password"
             value={formData.password}
             onChange={(e) => handleInputChange("password", e.target.value)}
-            className="mt-2"
             placeholder="Enter your password"
+            className="h-11 text-base"
             required
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -668,17 +708,15 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           </p>
         </div>
         
-        <div>
-          <Label htmlFor="confirmPassword" className="text-base font-medium">
-            Confirm Password *
-          </Label>
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password *</Label>
           <Input
             id="confirmPassword"
             type="password"
             value={formData.confirmPassword}
             onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-            className="mt-2"
             placeholder="Re-enter your password"
+            className="h-11 text-base"
             required
           />
         </div>
@@ -703,22 +741,22 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       </div>
 
       <div>
-        <Label className="text-base font-medium mb-3 block">Select Your Track *</Label>
+        <Label className="text-sm font-medium mb-3 block">Select Your Track *</Label>
         <RadioGroup 
           value={formData.track} 
           onValueChange={(value) => handleInputChange("track", value)}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
           {tracks.map((track) => (
             <Label
               key={track.value}
               htmlFor={track.value}
-              className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-3 sm:p-4 cursor-pointer hover:border-blue-300 transition-colors"
+              className="flex items-center space-x-3 border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 transition-colors"
             >
               <RadioGroupItem value={track.value} id={track.value} />
               <div className="flex items-center space-x-2">
                 {track.icon}
-                <span className="font-medium text-sm sm:text-base">{track.label}</span>
+                <span className="font-medium text-sm">{track.label}</span>
               </div>
             </Label>
           ))}
@@ -726,29 +764,29 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
       </div>
 
       <div>
-        <Label className="text-base font-medium mb-3 block">Select Your Program *</Label>
+        <Label className="text-sm font-medium mb-3 block">Select Your Program *</Label>
         <RadioGroup 
           value={formData.program} 
           onValueChange={(value) => handleInputChange("program", value)}
-          className="space-y-3 sm:space-y-4"
+          className="space-y-3"
         >
           {programs.map((program) => (
             <Label
               key={program.value}
               htmlFor={program.value}
-              className="flex items-start space-x-3 border-2 border-gray-200 rounded-lg p-3 sm:p-4 cursor-pointer hover:border-blue-300 transition-colors"
+              className="flex items-start space-x-3 border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 transition-colors"
             >
               <RadioGroupItem value={program.value} id={program.value} className="mt-1" />
               <div className="flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-1 sm:gap-0">
-                  <span className="font-medium text-sm sm:text-base">{program.label}</span>
-                  <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs sm:text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-1">
+                  <span className="font-medium text-sm">{program.label}</span>
+                  <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
                     {program.price}
                   </Badge>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-1">{program.description}</p>
-                <div className="flex items-center text-xs sm:text-sm text-blue-600">
-                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <p className="text-xs text-gray-600 mb-1">{program.description}</p>
+                <div className="flex items-center text-xs text-blue-600">
+                  <Calendar className="w-3 h-3 mr-1" />
                   {program.duration}
                 </div>
               </div>
@@ -757,15 +795,15 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </RadioGroup>
       </div>
 
-      <div>
-        <Label htmlFor="motivation">Why do you want to join this program? *</Label>
+      <div className="space-y-2">
+        <Label htmlFor="motivation" className="text-sm font-medium">Why do you want to join this program? *</Label>
         <Textarea
           id="motivation"
           value={formData.motivation}
           onChange={(e) => handleInputChange("motivation", e.target.value)}
-          className="mt-1"
           placeholder="Should not be less than 50 characters"
           rows={4}
+          className="text-base"
         />
       </div>
     </motion.div>
@@ -787,137 +825,137 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         <p className="text-sm sm:text-base text-gray-600">Just a few more details to complete your application</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div>
-          <Label htmlFor="education">Highest Education Level</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="education" className="text-sm font-medium">Highest Education Level</Label>
           <Select value={formData.education} onValueChange={(value) => handleInputChange("education", value)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder="Select education level" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
-              <SelectItem value="high-school">High School</SelectItem>
-              <SelectItem value="associate">Associate Degree</SelectItem>
-              <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
-              <SelectItem value="master">Master's Degree</SelectItem>
-              <SelectItem value="phd">PhD</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+            <SelectContent className="max-h-60">
+              <SelectItem value="high-school" className="text-base">High School</SelectItem>
+              <SelectItem value="associate" className="text-base">Associate Degree</SelectItem>
+              <SelectItem value="bachelor" className="text-base">Bachelor's Degree</SelectItem>
+              <SelectItem value="master" className="text-base">Master's Degree</SelectItem>
+              <SelectItem value="phd" className="text-base">PhD</SelectItem>
+              <SelectItem value="other" className="text-base">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="experience">Work Experience</Label>
+        <div className="space-y-2">
+          <Label htmlFor="experience" className="text-sm font-medium">Work Experience</Label>
           <Select value={formData.experience} onValueChange={(value) => handleInputChange("experience", value)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder="Select experience level" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
-              <SelectItem value="entry">Entry Level (0-2 years)</SelectItem>
-              <SelectItem value="mid">Mid Level (3-5 years)</SelectItem>
-              <SelectItem value="senior">Senior Level (6+ years)</SelectItem>
-              <SelectItem value="career-change">Career Change</SelectItem>
+            <SelectContent className="max-h-60">
+              <SelectItem value="entry" className="text-base">Entry Level (0-2 years)</SelectItem>
+              <SelectItem value="mid" className="text-base">Mid Level (3-5 years)</SelectItem>
+              <SelectItem value="senior" className="text-base">Senior Level (6+ years)</SelectItem>
+              <SelectItem value="career-change" className="text-base">Career Change</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="currentRole">Current Role/Industry</Label>
+      <div className="space-y-2">
+        <Label htmlFor="currentRole" className="text-sm font-medium">Current Role/Industry</Label>
         <Select value={formData.currentRole} onValueChange={(value) => handleInputChange("currentRole", value)}>
-          <SelectTrigger className="mt-1">
+          <SelectTrigger className="h-11 text-base">
             <SelectValue placeholder="Select your current role or industry" />
           </SelectTrigger>
-          <SelectContent className="max-h-[200px] sm:max-h-[300px]">
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="recent-graduate">Recent Graduate</SelectItem>
-            <SelectItem value="unemployed">Currently Unemployed</SelectItem>
-            <SelectItem value="entrepreneur">Entrepreneur/Business Owner</SelectItem>
-            <SelectItem value="tech-developer">Software Developer</SelectItem>
-            <SelectItem value="tech-other">Other Tech Role</SelectItem>
-            <SelectItem value="finance">Finance/Banking</SelectItem>
-            <SelectItem value="healthcare">Healthcare</SelectItem>
-            <SelectItem value="education">Education/Teaching</SelectItem>
-            <SelectItem value="marketing">Marketing/Advertising</SelectItem>
-            <SelectItem value="sales">Sales</SelectItem>
-            <SelectItem value="operations">Operations/Admin</SelectItem>
-            <SelectItem value="hr">Human Resources</SelectItem>
-            <SelectItem value="retail">Retail/Customer Service</SelectItem>
-            <SelectItem value="consulting">Consulting</SelectItem>
-            <SelectItem value="government">Government/Public Service</SelectItem>
-            <SelectItem value="ngo">NGO/Non-Profit</SelectItem>
-            <SelectItem value="media">Media/Communications</SelectItem>
-            <SelectItem value="manufacturing">Manufacturing</SelectItem>
-            <SelectItem value="oil-gas">Oil & Gas</SelectItem>
-            <SelectItem value="agriculture">Agriculture</SelectItem>
-            <SelectItem value="other">Other Industry</SelectItem>
+          <SelectContent className="max-h-60">
+            <SelectItem value="student" className="text-base">Student</SelectItem>
+            <SelectItem value="recent-graduate" className="text-base">Recent Graduate</SelectItem>
+            <SelectItem value="unemployed" className="text-base">Currently Unemployed</SelectItem>
+            <SelectItem value="entrepreneur" className="text-base">Entrepreneur/Business Owner</SelectItem>
+            <SelectItem value="tech-developer" className="text-base">Software Developer</SelectItem>
+            <SelectItem value="tech-other" className="text-base">Other Tech Role</SelectItem>
+            <SelectItem value="finance" className="text-base">Finance/Banking</SelectItem>
+            <SelectItem value="healthcare" className="text-base">Healthcare</SelectItem>
+            <SelectItem value="education" className="text-base">Education/Teaching</SelectItem>
+            <SelectItem value="marketing" className="text-base">Marketing/Advertising</SelectItem>
+            <SelectItem value="sales" className="text-base">Sales</SelectItem>
+            <SelectItem value="operations" className="text-base">Operations/Admin</SelectItem>
+            <SelectItem value="hr" className="text-base">Human Resources</SelectItem>
+            <SelectItem value="retail" className="text-base">Retail/Customer Service</SelectItem>
+            <SelectItem value="consulting" className="text-base">Consulting</SelectItem>
+            <SelectItem value="government" className="text-base">Government/Public Service</SelectItem>
+            <SelectItem value="ngo" className="text-base">NGO/Non-Profit</SelectItem>
+            <SelectItem value="media" className="text-base">Media/Communications</SelectItem>
+            <SelectItem value="manufacturing" className="text-base">Manufacturing</SelectItem>
+            <SelectItem value="oil-gas" className="text-base">Oil & Gas</SelectItem>
+            <SelectItem value="agriculture" className="text-base">Agriculture</SelectItem>
+            <SelectItem value="other" className="text-base">Other Industry</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div>
-          <Label htmlFor="availableHours">Weekly Study Commitment</Label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="availableHours" className="text-sm font-medium">Weekly Study Commitment</Label>
           <Select value={formData.availableHours} onValueChange={(value) => handleInputChange("availableHours", value)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder="Hours per week" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
-              <SelectItem value="5-10">5-10 hours per week</SelectItem>
-              <SelectItem value="10-15">10-15 hours per week</SelectItem>
-              <SelectItem value="15-20">15-20 hours per week</SelectItem>
-              <SelectItem value="20-25">20-25 hours per week</SelectItem>
-              <SelectItem value="25+">25+ hours per week</SelectItem>
-              <SelectItem value="flexible">Flexible schedule</SelectItem>
+            <SelectContent className="max-h-60">
+              <SelectItem value="5-10" className="text-base">5-10 hours per week</SelectItem>
+              <SelectItem value="10-15" className="text-base">10-15 hours per week</SelectItem>
+              <SelectItem value="15-20" className="text-base">15-20 hours per week</SelectItem>
+              <SelectItem value="20-25" className="text-base">20-25 hours per week</SelectItem>
+              <SelectItem value="25+" className="text-base">25+ hours per week</SelectItem>
+              <SelectItem value="flexible" className="text-base">Flexible schedule</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="preferredStartDate">Preferred Start Date</Label>
+        <div className="space-y-2">
+          <Label htmlFor="preferredStartDate" className="text-sm font-medium">Preferred Start Date</Label>
           <Select value={formData.preferredStartDate} onValueChange={(value) => handleInputChange("preferredStartDate", value)}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="h-11 text-base">
               <SelectValue placeholder="When would you like to start?" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px] sm:max-h-[300px]">
-              <SelectItem value="immediately">Immediately</SelectItem>
-              <SelectItem value="within-2-weeks">Within 2 weeks</SelectItem>
-              <SelectItem value="within-month">Within a month</SelectItem>
-              <SelectItem value="next-cohort">Next available cohort</SelectItem>
-              <SelectItem value="flexible">Flexible timing</SelectItem>
+            <SelectContent className="max-h-60">
+              <SelectItem value="immediately" className="text-base">Immediately</SelectItem>
+              <SelectItem value="within-2-weeks" className="text-base">Within 2 weeks</SelectItem>
+              <SelectItem value="within-month" className="text-base">Within a month</SelectItem>
+              <SelectItem value="next-cohort" className="text-base">Next available cohort</SelectItem>
+              <SelectItem value="flexible" className="text-base">Flexible timing</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="referralSource">How did you hear about us?</Label>
+      <div className="space-y-2">
+        <Label htmlFor="referralSource" className="text-sm font-medium">How did you hear about us?</Label>
         <Select value={formData.referralSource} onValueChange={(value) => handleInputChange("referralSource", value)}>
-          <SelectTrigger className="mt-1">
+          <SelectTrigger className="h-11 text-base">
             <SelectValue placeholder="Select an option" />
           </SelectTrigger>
-          <SelectContent className="max-h-[200px] sm:max-h-[300px]">
-            <SelectItem value="google">Google Search</SelectItem>
-            <SelectItem value="facebook">Facebook</SelectItem>
-            <SelectItem value="instagram">Instagram</SelectItem>
-            <SelectItem value="twitter">Twitter/X</SelectItem>
-            <SelectItem value="linkedin">LinkedIn</SelectItem>
-            <SelectItem value="youtube">YouTube</SelectItem>
-            <SelectItem value="whatsapp">WhatsApp</SelectItem>
-            <SelectItem value="friend">Friend/Family</SelectItem>
-            <SelectItem value="colleague">Work Colleague</SelectItem>
-            <SelectItem value="tech-community">Tech Community/Forum</SelectItem>
-            <SelectItem value="university">University/School</SelectItem>
-            <SelectItem value="job-board">Job Board</SelectItem>
-            <SelectItem value="podcast">Podcast</SelectItem>
-            <SelectItem value="blog">Blog/Article</SelectItem>
-            <SelectItem value="event">Tech Event/Meetup</SelectItem>
-            <SelectItem value="advertisement">Online Advertisement</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+          <SelectContent className="max-h-60">
+            <SelectItem value="google" className="text-base">Google Search</SelectItem>
+            <SelectItem value="facebook" className="text-base">Facebook</SelectItem>
+            <SelectItem value="instagram" className="text-base">Instagram</SelectItem>
+            <SelectItem value="twitter" className="text-base">Twitter/X</SelectItem>
+            <SelectItem value="linkedin" className="text-base">LinkedIn</SelectItem>
+            <SelectItem value="youtube" className="text-base">YouTube</SelectItem>
+            <SelectItem value="whatsapp" className="text-base">WhatsApp</SelectItem>
+            <SelectItem value="friend" className="text-base">Friend/Family</SelectItem>
+            <SelectItem value="colleague" className="text-base">Work Colleague</SelectItem>
+            <SelectItem value="tech-community" className="text-base">Tech Community/Forum</SelectItem>
+            <SelectItem value="university" className="text-base">University/School</SelectItem>
+            <SelectItem value="job-board" className="text-base">Job Board</SelectItem>
+            <SelectItem value="podcast" className="text-base">Podcast</SelectItem>
+            <SelectItem value="blog" className="text-base">Blog/Article</SelectItem>
+            <SelectItem value="event" className="text-base">Tech Event/Meetup</SelectItem>
+            <SelectItem value="advertisement" className="text-base">Online Advertisement</SelectItem>
+            <SelectItem value="other" className="text-base">Other</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4">
         <div className="flex items-start space-x-3">
           <Checkbox
             id="hasLaptop"
@@ -954,119 +992,171 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     </motion.div>
   );
 
-  const renderStep4 = () => (
-    <motion.div
-      initial={{ x: 300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: -300, opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-4 sm:space-y-6"
-    >
-      <div className="text-center mb-4 sm:mb-6">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-          <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Complete Your Enrollment</h3>
-        <p className="text-sm sm:text-base text-gray-600">Choose how you'd like to proceed with payment</p>
-      </div>
+  const renderStep4 = () => {
+    const fullAmount = getProgramPrice(formData.program);
+    const selectedPayment = paymentOptions.find(opt => opt.id === paymentMethod);
+    const isWhatsApp = selectedPayment?.action === 'whatsapp';
+    const partialAmount = fullAmount * 0.6;
+    const remainingAmount = fullAmount * 0.4;
 
-      <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-        <div className="flex items-start space-x-3">
-          <div className="bg-green-100 p-2 rounded-full">
-            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+    return (
+      <motion.div
+        initial={{ x: 300, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: -300, opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4 sm:space-y-6"
+      >
+        <div className="text-center mb-4 sm:mb-6">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div>
-            <h4 className="font-medium text-green-800 text-sm sm:text-base">Application Submitted!</h4>
-            <p className="text-xs sm:text-sm text-green-600 mt-1">
-              Your application ID: <span className="font-mono font-bold">{submittedApplicationId?.substring(0, 8)}...</span>
-            </p>
-          </div>
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Complete Your Enrollment</h3>
+          <p className="text-sm sm:text-base text-gray-600">Choose how you'd like to proceed with payment</p>
         </div>
-      </div>
 
-      <div className="space-y-3 sm:space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1 sm:gap-0">
-            <span className="font-medium text-blue-800 text-sm sm:text-base">Program Details</span>
-            <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs sm:text-sm">
-              {formData.track.replace('-', ' ').toUpperCase()}
-            </Badge>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start space-x-3">
+            <div className="bg-green-100 p-2 rounded-full">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
             <div>
-              <p className="text-xs sm:text-sm text-gray-600">
-                {programs.find(p => p.value === formData.program)?.label}
-              </p>
-              <p className="text-xs text-gray-500">
-                {programs.find(p => p.value === formData.program)?.description}
+              <h4 className="font-medium text-green-800 text-sm">Application Submitted!</h4>
+              <p className="text-xs text-green-600 mt-1">
+                Your application ID: <span className="font-mono font-bold">{submittedApplicationId?.substring(0, 8)}...</span>
               </p>
             </div>
-            <span className="text-base sm:text-lg font-bold text-blue-700">
-              {programs.find(p => p.value === formData.program)?.price}
-            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:gap-4">
-          {paymentOptions.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => handlePaymentMethodSelect(option)}
-              disabled={isProcessingPayment}
-              className={`flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 border-2 rounded-lg text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
-                paymentMethod === option.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              <div className={`${option.color} p-2 sm:p-3 rounded-full`}>
-                <div className="w-5 h-5 sm:w-6 sm:h-6">
-                  {option.icon}
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1">
+              <span className="font-medium text-blue-800 text-sm">Program Details</span>
+              <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
+                {formData.track.replace('-', ' ').toUpperCase()}
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {formData.program === 'professional' ? 'Professional Track' : 'LaunchPad Track'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formData.program === 'professional' 
+                      ? 'Advanced training with internship' 
+                      : 'Essential skills for career entry'}
+                  </p>
                 </div>
+                <span className="text-lg font-bold text-blue-700">
+                  ₦{fullAmount.toLocaleString()}
+                </span>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{option.title}</h4>
-                  {paymentMethod === option.id && (
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+              
+              {isWhatsApp && (
+                <div className="mt-3 pt-3 border-t border-blue-100 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Initial Payment (60%):</span>
+                    <span className="font-semibold text-green-600">₦{partialAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Remaining Balance (40%):</span>
+                    <span className="font-semibold text-orange-600">₦{remainingAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {paymentOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => handlePaymentMethodSelect(option)}
+                disabled={isProcessingPayment}
+                className={`flex items-start space-x-4 p-4 border-2 rounded-lg text-left transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                  paymentMethod === option.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-blue-300'
+                }`}
+              >
+                <div className={`${option.color} p-3 rounded-full`}>
+                  <div className="w-6 h-6">
+                    {option.icon}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-semibold text-gray-900 text-sm">{option.title}</h4>
+                    {paymentMethod === option.id && (
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600">{option.description}</p>
+                  {option.id === "whatsapp-partial" && (
+                    <div className="mt-2 flex items-center text-xs text-green-600">
+                      <MessageCircle className="w-3 h-3 mr-1" />
+                      <span>Chat with our team to arrange payment</span>
                     </div>
                   )}
+                  {option.id === "later" && (
+                    <p className="text-xs text-red-600 mt-1">
+                      ⚠️ Limited spots available. Payment must be completed within 24 hours.
+                    </p>
+                  )}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600">{option.description}</p>
-                {option.id === "later" && (
-                  <p className="text-xs text-red-600 mt-1">
-                    ⚠️ Limited spots available. Payment must be completed within 24 hours.
-                  </p>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {paymentMethod === "paystack" && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-            <h4 className="font-medium text-blue-800 text-sm sm:text-base mb-2">Payment Information</h4>
-            <ul className="text-xs sm:text-sm text-blue-600 space-y-1">
-              <li className="flex items-center">
-                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Secure SSL encrypted payment
-              </li>
-              <li className="flex items-center">
-                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Multiple payment methods accepted
-              </li>
-              <li className="flex items-center">
-                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Instant enrollment upon successful payment
-              </li>
-            </ul>
+              </button>
+            ))}
           </div>
-        )}
-      </div>
-    </motion.div>
-  );
+
+          {paymentMethod && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 text-sm mb-2">
+                {paymentMethod === 'whatsapp-partial' ? 'WhatsApp Payment Process' : 'Payment Information'}
+              </h4>
+              <ul className="text-xs text-blue-600 space-y-1">
+                {paymentMethod === 'whatsapp-partial' ? (
+                  <>
+                    <li className="flex items-start">
+                      <MessageCircle className="w-4 h-4 mr-2 text-green-600 mt-0.5" />
+                      You'll be redirected to WhatsApp to chat with our admissions team
+                    </li>
+                    <li className="flex items-start">
+                      <MessageCircle className="w-4 h-4 mr-2 text-blue-600 mt-0.5" />
+                      Discuss payment options and get personalized assistance
+                    </li>
+                    <li className="flex items-start">
+                      <CreditCard className="w-4 h-4 mr-2 text-purple-600 mt-0.5" />
+                      Receive secure payment link directly from our staff
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Secure SSL encrypted payment
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Multiple payment methods accepted
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Instant enrollment upon successful payment
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
 
   const renderCurrentStep = () => {
     if (applicationSuccess) {
@@ -1084,7 +1174,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
   const renderNavigationButtons = () => {
     if (applicationSuccess) {
       return (
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 sm:mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-gray-200">
           <Button
             type="button"
             variant="outline"
@@ -1092,7 +1182,7 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
               setApplicationSuccess(false);
               setStep(3);
             }}
-            className="px-4 sm:px-6 w-full sm:w-auto"
+            className="px-6 w-full sm:w-auto"
             disabled={isProcessingPayment}
           >
             Back to Application
@@ -1107,7 +1197,11 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
                   if (option) handlePaymentMethodSelect(option);
                 }}
                 disabled={isProcessingPayment}
-                className="px-6 sm:px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 w-full sm:w-auto"
+                className={`px-8 w-full sm:w-auto ${
+                  paymentMethod === 'whatsapp-partial'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                    : 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800'
+                }`}
               >
                 {isProcessingPayment ? (
                   <>
@@ -1116,6 +1210,11 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     Processing...
+                  </>
+                ) : paymentMethod === 'whatsapp-partial' ? (
+                  <>
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Chat on WhatsApp
                   </>
                 ) : (
                   <>
@@ -1131,14 +1230,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
     }
     
     return (
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 sm:mt-8 pt-6 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-gray-200">
         <div>
           {step > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={() => setStep(step - 1)}
-              className="px-4 sm:px-6 w-full sm:w-auto"
+              className="px-6 w-full sm:w-auto"
               disabled={isSubmitting}
             >
               Previous
@@ -1147,13 +1246,13 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
-          <span className="text-xs sm:text-sm text-gray-500">
+          <span className="text-xs text-gray-500">
             Step {step} of {applicationSuccess ? 4 : 3}
           </span>
           <Button
             type="submit"
             disabled={isSubmitting || (step === 3 && !formData.agreeToTerms)}
-            className={`px-4 sm:px-6 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-6 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed ${
               step === 3 ? 'sm:px-8' : ''
             }`}
           >
@@ -1178,13 +1277,36 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-3 sm:p-6 mx-0 sm:mx-4">
-        <DialogHeader className="relative">
+      {/* FIXED: Responsive DialogContent with proper mobile handling */}
+      <DialogContent className="fixed left-0 top-0 w-full h-full sm:left-1/2 sm:top-1/2 sm:w-[95%] sm:max-w-2xl sm:h-auto sm:max-h-[90vh] sm:-translate-x-1/2 sm:-translate-y-1/2 p-0 sm:p-6 overflow-hidden border-0 sm:border rounded-lg">
+        {/* Mobile header */}
+        <div className="sticky top-0 bg-white border-b z-50 p-4 flex items-center justify-between sm:hidden">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {applicationSuccess ? "Complete Enrollment" : "Apply Now"}
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Step {step} of {applicationSuccess ? 4 : 3}
+            </p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="absolute -top-1 -right-1 h-8 w-8 p-0 sm:-top-2 sm:-right-2"
+            className="h-8 w-8 p-0"
+            disabled={isSubmitting || isProcessingPayment}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Desktop header */}
+        <DialogHeader className="hidden sm:block relative pb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute right-0 top-0 h-8 w-8 p-0"
             disabled={isSubmitting || isProcessingPayment}
           >
             <X className="h-4 w-4" />
@@ -1197,15 +1319,15 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           <DialogDescription className="text-gray-600 text-center mt-2 text-sm sm:text-base">
             {applicationSuccess 
               ? "Choose your payment method to secure your spot in the program"
-              : "Join our skills-to-jobs program and transform your career in tech. Complete this application to get started."}
+              : "Join our skills-to-jobs program and transform your career in tech."}
           </DialogDescription>
           
           {/* Progress Indicator */}
-          <div className="flex items-center justify-center space-x-1 sm:space-x-2 mt-4">
+          <div className="flex items-center justify-center space-x-2 mt-4">
             {[1, 2, 3, 4].map((stepNumber) => (
               <div key={stepNumber} className="flex items-center">
                 <div
-                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                     (applicationSuccess && stepNumber === 4) || (!applicationSuccess && stepNumber === step)
                       ? "bg-blue-600 text-white"
                       : stepNumber < step || (applicationSuccess && stepNumber < 4)
@@ -1214,14 +1336,14 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
                   } ${stepNumber === 4 && !applicationSuccess ? 'opacity-50' : ''}`}
                 >
                   {stepNumber < step || (applicationSuccess && stepNumber < 4) ? (
-                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <CheckCircle className="w-4 h-4" />
                   ) : (
                     stepNumber
                   )}
                 </div>
                 {stepNumber < 4 && (
                   <div
-                    className={`w-8 sm:w-12 h-1 mx-1 sm:mx-2 transition-colors ${
+                    className={`w-12 h-1 mx-2 transition-colors ${
                       stepNumber < step || (applicationSuccess && stepNumber < 4)
                         ? "bg-green-500"
                         : "bg-gray-200"
@@ -1233,13 +1355,21 @@ export function ApplicationModal({ isOpen, onClose, selectedTrack, selectedProgr
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <AnimatePresence mode="wait">
-            {renderCurrentStep()}
-          </AnimatePresence>
+        {/* Scrollable form content */}
+        <div className="h-[calc(100vh-4rem)] sm:h-auto sm:max-h-[calc(90vh-8rem)] overflow-y-auto p-4 sm:p-0 sm:pr-1">
+          <form onSubmit={handleSubmit}>
+            <AnimatePresence mode="wait">
+              <div className="min-h-[60vh] sm:min-h-0">
+                {renderCurrentStep()}
+              </div>
+            </AnimatePresence>
 
-          {renderNavigationButtons()}
-        </form>
+            {/* Navigation buttons - sticky on mobile */}
+            <div className="sticky bottom-0 bg-white border-t pt-4 pb-2 mt-6 sm:static sm:border-t-0 sm:pt-6 sm:mt-8">
+              {renderNavigationButtons()}
+            </div>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
